@@ -1,0 +1,381 @@
+/*
+ * AI Website Concept Generator - Additional Styles
+ * These styles complement the inline styles in the template
+ */
+
+/* Additional responsive improvements */
+@media (max-width: 768px) {
+  .aiwcg-container {
+    padding: 1rem 0.5rem;
+  }
+
+  .aiwcg-glass {
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .aiwcg-grid-2,
+  .aiwcg-grid-3 {
+    grid-template-columns: 1fr;
+  }
+
+  .aiwcg-section-title {
+    font-size: 1.25rem;
+  }
+
+  .aiwcg-button {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+
+  .aiwcg-metric-card {
+    padding: 1rem;
+  }
+
+  .aiwcg-wireframe-section {
+    min-height: 40px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .aiwcg-container h1 {
+    font-size: 2rem !important;
+  }
+
+  .aiwcg-glass {
+    padding: 1rem;
+  }
+
+  .aiwcg-option-button {
+    padding: 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  .aiwcg-color-swatch {
+    width: 2rem;
+    height: 2rem;
+  }
+}
+
+/* Enhanced animations */
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.aiwcg-loading .aiwcg-spinner {
+  animation: spin 1s linear infinite, pulse 2s ease-in-out infinite;
+}
+
+/* Improved accessibility */
+.aiwcg-button:focus,
+.aiwcg-option-button:focus,
+.aiwcg-input:focus,
+.aiwcg-select:focus,
+.aiwcg-textarea:focus {
+  outline: 2px solid #8b5cf6;
+  outline-offset: 2px;
+}
+
+/* Enhanced hover effects */
+.aiwcg-feature-badge:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+}
+
+.aiwcg-metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+}
+
+/* Progress step improvements */
+.aiwcg-progress-step.active {
+  animation: slideInLeft 0.5s ease-out;
+}
+
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Wireframe section enhancements */
+.aiwcg-wireframe-section::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    transparent 50%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.aiwcg-wireframe-section:hover::before {
+  opacity: 1;
+}
+
+/* Color scheme improvements */
+.aiwcg-color-swatch {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.aiwcg-color-swatch:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Results section animations */
+.aiwcg-results-section > * {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Print styles for concept download */
+@media print {
+  .aiwcg-container {
+    background: white !important;
+    color: black !important;
+  }
+
+  .aiwcg-glass {
+    background: white !important;
+    border: 1px solid #ccc !important;
+    box-shadow: none !important;
+  }
+
+  .aiwcg-button {
+    display: none !important;
+  }
+
+  .aiwcg-wireframe-section {
+    border: 1px solid #ccc !important;
+    color: black !important;
+  }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .aiwcg-container {
+    animation: none !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .aiwcg-glass {
+    border: 2px solid white !important;
+  }
+
+  .aiwcg-option-button {
+    border: 2px solid white !important;
+  }
+
+  .aiwcg-wireframe-section {
+    border: 1px solid white !important;
+  }
+}
+
+/* Loading state improvements */
+.aiwcg-loading {
+  pointer-events: none;
+  user-select: none;
+}
+
+.aiwcg-loading .aiwcg-progress-step {
+  transform: scale(1);
+  transition: all 0.5s ease;
+}
+
+.aiwcg-loading .aiwcg-progress-step.active {
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+/* Custom scrollbar for webkit browsers */
+.aiwcg-container ::-webkit-scrollbar {
+  width: 8px;
+}
+
+.aiwcg-container ::-webkit-scrollbar-track {
+  background: rgba(31, 41, 55, 0.3);
+  border-radius: 4px;
+}
+
+.aiwcg-container ::-webkit-scrollbar-thumb {
+  background: rgba(139, 92, 246, 0.6);
+  border-radius: 4px;
+}
+
+.aiwcg-container ::-webkit-scrollbar-thumb:hover {
+  background: rgba(139, 92, 246, 0.8);
+}
+
+/* Selection styling */
+.aiwcg-container ::selection {
+  background: rgba(139, 92, 246, 0.3);
+  color: white;
+}
+
+.aiwcg-container ::-moz-selection {
+  background: rgba(139, 92, 246, 0.3);
+  color: white;
+}
+
+/* Tooltip styles for wireframe sections */
+.aiwcg-wireframe-section[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  z-index: 1000;
+  margin-bottom: 0.25rem;
+}
+
+/* Enhanced button states */
+.aiwcg-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.aiwcg-button:active {
+  transform: translateY(1px);
+}
+
+/* Form validation styling */
+.aiwcg-input:invalid,
+.aiwcg-select:invalid {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+}
+
+.aiwcg-input:valid,
+.aiwcg-select:valid {
+  border-color: #22c55e;
+}
+
+/* Success animations */
+@keyframes checkmark {
+  0% {
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.aiwcg-success-icon svg {
+  animation: checkmark 0.6s ease-out;
+}
+
+/* Performance optimization */
+.aiwcg-wireframe-section,
+.aiwcg-option-button,
+.aiwcg-button {
+  will-change: transform;
+}
+
+/* RTL support */
+[dir="rtl"] .aiwcg-container {
+  text-align: right;
+}
+
+[dir="rtl"] .aiwcg-section-icon {
+  margin-right: 0;
+  margin-left: 0.75rem;
+}
+
+/* Dark mode enhancements (if needed) */
+@media (prefers-color-scheme: dark) {
+  .aiwcg-container {
+    /* Already dark by default */
+  }
+}
+
+/* Additional utility classes */
+.aiwcg-fade-in {
+  animation: fadeIn 0.5s ease-in;
+}
+
+.aiwcg-slide-up {
+  animation: slideUp 0.5s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Improved focus management */
+.aiwcg-container:focus-within .aiwcg-glass {
+  border-color: rgba(139, 92, 246, 0.3);
+}
+
+/* Enhanced loading spinner */
+.aiwcg-spinner {
+  background: conic-gradient(transparent, #8b5cf6);
+  border-radius: 50%;
+  position: relative;
+}
+
+.aiwcg-spinner::before {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  right: 3px;
+  bottom: 3px;
+  background: rgba(31, 41, 55, 0.8);
+  border-radius: 50%;
+}
