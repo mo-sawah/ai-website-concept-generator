@@ -2,8 +2,9 @@
 /**
  * Plugin Name: AI Website Concept Generator
  * Description: Generate detailed website concepts and wireframes using AI, with optional demo generation
- * Version: 1.0.0
+ * Version: 1.0.1
  * Author: Mohamed Sawah
+ * Text Domain: ai-website-concept-generator
  */
 
 // Prevent direct access
@@ -18,8 +19,21 @@ define('AIWCG_VERSION', '1.0.0');
 
 class AIWebsiteConceptGenerator {
     
-    public function __init() {
-        add_action('init', array($this, 'init'));
+    private static $instance = null;
+    
+    public static function get_instance() {
+        if (null === self::$instance) {
+            self::$instance = new self();
+        }
+        return self::$instance;
+    }
+    
+    private function __construct() {
+        add_action('plugins_loaded', array($this, 'init'));
+    }
+    
+    public function init() {
+        // Hook into WordPress
         add_action('wp_enqueue_scripts', array($this, 'enqueue_scripts'));
         add_action('wp_ajax_generate_concept', array($this, 'handle_generate_concept'));
         add_action('wp_ajax_nopriv_generate_concept', array($this, 'handle_generate_concept'));
@@ -28,20 +42,32 @@ class AIWebsiteConceptGenerator {
         
         // Register shortcode
         add_shortcode('ai_website_generator', array($this, 'render_shortcode'));
+        
+        // Debug: Add admin notice to confirm plugin is loaded
+        add_action('admin_notices', array($this, 'debug_admin_notice'));
     }
     
-    public function init() {
-        // Plugin initialization
+    public function debug_admin_notice() {
+        if (current_user_can('manage_options')) {
+            echo '<div class="notice notice-info is-dismissible">';
+            echo '<p>AI Website Concept Generator plugin is active. Use shortcode: [ai_website_generator]</p>';
+            echo '</div>';
+        }
     }
     
     public function enqueue_scripts() {
-        wp_enqueue_script('aiwcg-main', AIWCG_PLUGIN_URL . 'assets/js/main.js', array('jquery'), AIWCG_VERSION, true);
-        wp_enqueue_style('aiwcg-style', AIWCG_PLUGIN_URL . 'assets/css/style.css', array(), AIWCG_VERSION);
-        
-        wp_localize_script('aiwcg-main', 'aiwcg_ajax', array(
-            'ajax_url' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('aiwcg_nonce')
-        ));
+        // Only enqueue on pages with the shortcode
+        global $post;
+        if (is_a($post, 'WP_Post') && has_shortcode($post->post_content, 'ai_website_generator')) {
+            wp_enqueue_script('jquery');
+            wp_enqueue_script('aiwcg-main', AIWCG_PLUGIN_URL . 'assets/js/main.js', array('jquery'), AIWCG_VERSION, true);
+            wp_enqueue_style('aiwcg-style', AIWCG_PLUGIN_URL . 'assets/css/style.css', array(), AIWCG_VERSION);
+            
+            wp_localize_script('aiwcg-main', 'aiwcg_ajax', array(
+                'ajax_url' => admin_url('admin-ajax.php'),
+                'nonce' => wp_create_nonce('aiwcg_nonce')
+            ));
+        }
     }
     
     public function add_admin_menu() {
@@ -121,10 +147,10 @@ class AIWebsiteConceptGenerator {
                 ?>
             </form>
             
-            <div class="card" style="margin-top: 20px;">
+            <div class="card" style="margin-top: 20px; padding: 20px;">
                 <h2>Usage Instructions</h2>
                 <p>To display the AI Website Generator form on any page or post, use the shortcode:</p>
-                <code>[ai_website_generator]</code>
+                <code style="background: #f1f1f1; padding: 5px; border-radius: 3px;">[ai_website_generator]</code>
                 
                 <h3>API Keys Setup:</h3>
                 <ul>
@@ -137,6 +163,11 @@ class AIWebsiteConceptGenerator {
                     <li><strong>OpenAI:</strong> gpt-4 or gpt-4-turbo</li>
                     <li><strong>OpenRouter:</strong> anthropic/claude-3-opus or openai/gpt-4</li>
                 </ul>
+                
+                <h3>Debug Info:</h3>
+                <p><strong>Plugin Path:</strong> <?php echo AIWCG_PLUGIN_PATH; ?></p>
+                <p><strong>Plugin URL:</strong> <?php echo AIWCG_PLUGIN_URL; ?></p>
+                <p><strong>Template File Exists:</strong> <?php echo file_exists(AIWCG_PLUGIN_PATH . 'templates/generator-form.php') ? 'Yes' : 'No'; ?></p>
             </div>
         </div>
         <?php
@@ -191,15 +222,21 @@ class AIWebsiteConceptGenerator {
             'style' => 'default'
         ), $atts);
         
+        // Check if template file exists
+        $template_path = AIWCG_PLUGIN_PATH . 'templates/generator-form.php';
+        if (!file_exists($template_path)) {
+            return '<div style="background: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px;">Template file not found: ' . $template_path . '</div>';
+        }
+        
         ob_start();
-        include AIWCG_PLUGIN_PATH . 'templates/generator-form.php';
+        include $template_path;
         return ob_get_clean();
     }
     
     public function handle_generate_concept() {
         check_ajax_referer('aiwcg_nonce', 'nonce');
         
-        $form_data = $_POST['form_data'];
+        $form_data = json_decode(stripslashes($_POST['form_data']), true);
         
         try {
             $concept = $this->generate_ai_concept($form_data);
@@ -358,110 +395,57 @@ BUSINESS INFORMATION:
 - Features Needed: {$features_text}
 - Description: {$form_data['businessDescription']}
 
-REQUIREMENTS:
-1. Provide realistic cost estimates based on complexity and features
-2. Create detailed wireframes with proper sections and layouts
-3. Include technical specifications and performance metrics
-4. Suggest appropriate technology stack
-5. Provide content strategy recommendations
-6. Include SEO and marketing considerations
-
 RESPOND WITH THIS EXACT JSON STRUCTURE:
 {
   \"concept\": {
     \"title\": \"[Business name with professional tagline]\",
     \"tagline\": \"[Compelling 5-8 word tagline specific to industry]\",
-    \"description\": \"[Detailed 3-4 sentence description of the website concept, focusing on user experience and business goals]\",
-    \"estimatedCost\": \"[Realistic range like '$8,500 - $15,000' based on complexity]\",
+    \"description\": \"[Detailed 3-4 sentence description of the website concept]\",
+    \"estimatedCost\": \"[Realistic range like '$8,500 - $15,000']\",
     \"timeline\": \"[Realistic timeline like '8-12 weeks']\",
-    \"pages\": \"[Number like 8-15 based on requirements]\",
+    \"pages\": \"[Number like 8-15]\",
     \"sections\": [
-      \"[5-7 specific sections relevant to the business type]\"
-    ],
-    \"technologyStack\": [
-      \"[4-6 technologies like 'React.js', 'Node.js', 'PostgreSQL']\"
-    ],
-    \"contentStrategy\": \"[2-3 sentences about content approach and requirements]\",
-    \"seoStrategy\": \"[2-3 sentences about SEO approach and expected outcomes]\"
+      \"Header Navigation\",
+      \"Hero Section\",
+      \"Services Overview\",
+      \"About Company\",
+      \"Testimonials\",
+      \"Contact Information\"
+    ]
   },
   \"wireframes\": {
     \"homepage\": {
       \"sections\": [
-        {\"name\": \"Header with Navigation\", \"height\": 80, \"color\": \"#1e293b\", \"description\": \"Logo, main navigation, CTA button\"},
-        {\"name\": \"Hero Section\", \"height\": 600, \"color\": \"#3b82f6\", \"description\": \"[Specific hero content for this business]\"},
-        {\"name\": \"[Business-specific section]\", \"height\": 400, \"color\": \"#f8fafc\", \"description\": \"[Detailed description]\"},
-        {\"name\": \"[Another relevant section]\", \"height\": 350, \"color\": \"#e2e8f0\", \"description\": \"[Detailed description]\"},
-        {\"name\": \"[CTA or Contact section]\", \"height\": 300, \"color\": \"#1e40af\", \"description\": \"[Detailed description]\"},
-        {\"name\": \"Footer\", \"height\": 200, \"color\": \"#0f172a\", \"description\": \"Links, contact info, social media\"}
+        {\"name\": \"Header\", \"height\": 80, \"color\": \"#1e293b\", \"description\": \"Logo and navigation\"},
+        {\"name\": \"Hero Section\", \"height\": 600, \"color\": \"#3b82f6\", \"description\": \"Main headline and CTA\"},
+        {\"name\": \"Services\", \"height\": 400, \"color\": \"#f8fafc\", \"description\": \"Service offerings\"},
+        {\"name\": \"About\", \"height\": 350, \"color\": \"#e2e8f0\", \"description\": \"Company information\"},
+        {\"name\": \"Contact\", \"height\": 300, \"color\": \"#1e40af\", \"description\": \"Contact form\"},
+        {\"name\": \"Footer\", \"height\": 200, \"color\": \"#0f172a\", \"description\": \"Links and info\"}
       ]
-    },
-    \"additionalPages\": [
-      {
-        \"name\": \"[Relevant page like 'Services' or 'About']\",
-        \"purpose\": \"[Why this page is important]\",
-        \"keyElements\": [\"[3-4 key elements for this page]\"]
-      },
-      {
-        \"name\": \"[Another relevant page]\",
-        \"purpose\": \"[Purpose description]\",
-        \"keyElements\": [\"[3-4 key elements]\"]
-      }
-    ]
+    }
   },
   \"colorScheme\": {
-    \"primary\": \"[Color that matches industry - hex code]\",
-    \"secondary\": \"[Complementary color - hex code]\", 
-    \"accent\": \"[Accent color - hex code]\",
-    \"background\": \"[Background color - hex code]\",
-    \"text\": \"[Text color - hex code]\",
-    \"rationale\": \"[1-2 sentences explaining color choices for this industry]\"
+    \"primary\": \"#3b82f6\",
+    \"secondary\": \"#8b5cf6\", 
+    \"accent\": \"#f59e0b\",
+    \"background\": \"#ffffff\",
+    \"text\": \"#1f2937\"
   },
   \"features\": {
-    \"essential\": [\"[4-5 essential features specific to this business type]\"],
-    \"recommended\": [\"[3-4 recommended features that add value]\"],
-    \"advanced\": [\"[2-3 advanced features for future growth]\"],
-    \"integrations\": [\"[3-4 third-party integrations that would benefit this business]\"]
+    \"essential\": [\"Contact Forms\", \"Mobile Responsive\", \"SEO Optimization\"],
+    \"recommended\": [\"Live Chat\", \"Analytics\", \"Social Integration\"],
+    \"advanced\": [\"CRM Integration\", \"Automation\"]
   },
   \"performance\": {
-    \"seoScore\": \"[85-98 based on planned optimizations]\",
-    \"performanceScore\": \"[85-95 based on technical approach]\",
-    \"accessibilityScore\": \"[90-99 based on accessibility features]\",
-    \"mobileScore\": \"[90-99 based on responsive design approach]\"
-  },
-  \"contentRequirements\": {
-    \"copywritingPages\": \"[Number of pages needing professional copy]\",
-    \"photographyNeeds\": \"[Description of photo requirements]\",
-    \"videoContent\": \"[Video content recommendations]\",
-    \"estimatedContentCost\": \"[Additional cost for content creation]\"
-  },
-  \"maintenanceAndSupport\": {
-    \"monthlyMaintenance\": \"[Monthly cost estimate like '$150-300']\",
-    \"hostingRecommendation\": \"[Specific hosting recommendation]\",
-    \"securityFeatures\": [\"[3-4 security measures]\"],
-    \"backupStrategy\": \"[Backup approach description]\"
-  },
-  \"projectPhases\": [
-    {
-      \"phase\": \"Planning & Design\",
-      \"duration\": \"[Duration like '2-3 weeks']\",
-      \"deliverables\": [\"[3-4 specific deliverables]\"]
-    },
-    {
-      \"phase\": \"Development\",
-      \"duration\": \"[Duration]\",
-      \"deliverables\": [\"[3-4 deliverables]\"]
-    },
-    {
-      \"phase\": \"Testing & Launch\",
-      \"duration\": \"[Duration]\",
-      \"deliverables\": [\"[3-4 deliverables]\"]
-    }
-  ]
-}
-
-Make everything specific to the {$form_data['businessType']} in the {$form_data['industry']} industry. Ensure all recommendations are practical and industry-appropriate.";
+    \"seoScore\": \"92\",
+    \"performanceScore\": \"88\",
+    \"accessibilityScore\": \"95\",
+    \"mobileScore\": \"94\"
+  }
+}";
     }
 }
 
 // Initialize the plugin
-new AIWebsiteConceptGenerator();
+AIWebsiteConceptGenerator::get_instance();
